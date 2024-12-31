@@ -42,7 +42,13 @@ func reactWithLike(soldiers []*Soldier) func(*WhatsappService, *events.Message) 
 func registerMessage(soldiers []*Soldier) func(*WhatsappService, *events.Message) error {
 	return func(s *WhatsappService, msg *events.Message) error {
 		if soldier := getSoldierAuthor(msg, soldiers); soldier != nil && soldier.message == "" {
-			soldier.message = msg.Message.GetConversation()
+			var content string
+			if msg.Message.ExtendedTextMessage == nil {
+				content = msg.Message.GetConversation()
+			} else {
+				content = *msg.Message.GetExtendedTextMessage().Text
+			}
+			soldier.message = content
 			fmt.Printf("%+v", soldier)
 		}
 		return nil
@@ -51,6 +57,7 @@ func registerMessage(soldiers []*Soldier) func(*WhatsappService, *events.Message
 
 func printMessage(_ *WhatsappService, msg *events.Message) error {
 	fmt.Printf("--------------------\n%+v\n--------------------\n", msg)
+	fmt.Println(msg.Message.ExtendedTextMessage)
 	return nil
 }
 
