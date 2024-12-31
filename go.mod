@@ -1,4 +1,4 @@
-module github.com/yavidor/Doch-Echad-Composer.git
+module github.com/yavidor/Doch-Echad-Composer
 
 go 1.23.4
 
