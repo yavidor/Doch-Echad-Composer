@@ -15,6 +15,7 @@ import (
 )
 
 const COMMANDER_NUMBER = "972584388418"
+const GROUP_ID = "120363323028360735"
 
 type Soldier struct {
 	name    string
@@ -63,7 +64,7 @@ func reactWithLike(soldiers []*Soldier) func(*WhatsappService, *events.Message) 
 
 func registerMessage(soldiers []*Soldier) func(*WhatsappService, *events.Message) error {
 	return func(s *WhatsappService, msg *events.Message) error {
-		if soldier := getSoldierAuthor(msg, soldiers); soldier != nil && soldier.message == "" {
+		if soldier := getSoldierAuthor(msg, soldiers); soldier != nil && msg.Info.Chat.String() == types.NewJID(GROUP_ID, GROUP_SUFFIX).String() && soldier.message == "" {
 			var content string
 			if msg.Message.ExtendedTextMessage == nil {
 				content = msg.Message.GetConversation()
@@ -81,7 +82,7 @@ func sendIfFinished(soldiers []*Soldier) func(*WhatsappService, *events.Message)
 	return func(s *WhatsappService, msg *events.Message) error {
 		if allSoldiersAnswered(soldiers) {
 			s.SendMessage(composeMessage(soldiers), COMMANDER_NUMBER)
-			panic("OOPSY")
+			os.Exit(0)
 		}
 		return nil
 	}
