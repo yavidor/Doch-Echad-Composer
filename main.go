@@ -14,7 +14,7 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
-const COMMANDER_NUMBER = "972584388418"
+const COMMANDER_NUMBER = "972506433349"
 const GROUP_ID = "120363323028360735"
 
 type Soldier struct {
@@ -64,7 +64,7 @@ func reactWithLike(soldiers []*Soldier) func(*WhatsappService, *events.Message) 
 
 func registerMessage(soldiers []*Soldier) func(*WhatsappService, *events.Message) error {
 	return func(s *WhatsappService, msg *events.Message) error {
-		if soldier := getSoldierAuthor(msg, soldiers); soldier != nil && msg.Info.Chat.String() == types.NewJID(GROUP_ID, GROUP_SUFFIX).String() && soldier.message == "" {
+		if soldier := getSoldierAuthor(msg, soldiers); soldier != nil && soldier.message == "" {
 			var content string
 			if msg.Message.ExtendedTextMessage == nil {
 				content = msg.Message.GetConversation()
@@ -96,10 +96,10 @@ func printMessage(_ *WhatsappService, msg *events.Message) error {
 
 func main() {
 	teamB := []*Soldier{
-		// {name: "גיא אביב", jid: types.NewJID("972586570151", WHATSAPP_SERVER), message: ""},
-		// {name: "רועי סביון", jid: types.NewJID("972533392950", WHATSAPP_SERVER), message: ""},
-		// {name: "מיכל ארץ קדושה", jid: types.NewJID("972547501467", WHATSAPP_SERVER), message: ""},
-		// {name: "מלאכי שוורץ", jid: types.NewJID("972533011490", WHATSAPP_SERVER), message: ""},
+		{name: "גיא אביב", jid: types.NewJID("972586570151", WHATSAPP_SERVER), message: ""},
+		{name: "רועי סביון", jid: types.NewJID("972533392950", WHATSAPP_SERVER), message: ""},
+		{name: "מיכל ארץ קדושה", jid: types.NewJID("972547501467", WHATSAPP_SERVER), message: ""},
+		{name: "מלאכי שוורץ", jid: types.NewJID("972533011490", WHATSAPP_SERVER), message: ""},
 		{name: "יונתן אבידור", jid: types.NewJID("972542166594", WHATSAPP_SERVER), message: ""},
 	}
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
