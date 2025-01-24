@@ -27,7 +27,7 @@ func composeMessage(soldiers []*Soldier) string {
 	output := ""
 	for index, soldier := range soldiers {
 		output += fmt.Sprintf("*%s*\n%s\n", soldier.name, soldier.message)
-		if index != len(soldiers) {
+		if index != len(soldiers) - 1 {
 			output += "--------------------\n"
 		}
 	}
