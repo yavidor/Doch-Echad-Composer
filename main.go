@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	_ "github.com/mattn/go-sqlite3"
 	"go.mau.fi/whatsmeow"
 	"go.mau.fi/whatsmeow/store/sqlstore"
@@ -14,8 +16,10 @@ import (
 	waLog "go.mau.fi/whatsmeow/util/log"
 )
 
-const COMMANDER_NUMBER = "972506433349"
-const GROUP_ID = "120363323028360735"
+type soldierJson struct {
+	Name   string `json:"name"`
+	Number string `json:"number"`
+}
 
 type Soldier struct {
 	name    string
@@ -27,7 +31,7 @@ func composeMessage(soldiers []*Soldier) string {
 	output := ""
 	for index, soldier := range soldiers {
 		output += fmt.Sprintf("*%s*\n%s\n", soldier.name, soldier.message)
-		if index != len(soldiers) - 1 {
+		if index != len(soldiers)-1 {
 			output += "--------------------\n"
 		}
 	}
@@ -78,10 +82,10 @@ func registerMessage(soldiers []*Soldier) func(*WhatsappService, *events.Message
 	}
 }
 
-func sendIfFinished(soldiers []*Soldier) func(*WhatsappService, *events.Message) error {
+func sendIfFinished(soldiers []*Soldier, commanderNumber string) func(*WhatsappService, *events.Message) error {
 	return func(s *WhatsappService, msg *events.Message) error {
 		if allSoldiersAnswered(soldiers) {
-			s.SendMessage(composeMessage(soldiers), COMMANDER_NUMBER)
+			s.SendMessage(composeMessage(soldiers), commanderNumber)
 			os.Exit(0)
 		}
 		return nil
@@ -95,12 +99,26 @@ func printMessage(_ *WhatsappService, msg *events.Message) error {
 }
 
 func main() {
-	teamB := []*Soldier{
-		{name: "גיא אביב", jid: types.NewJID("972586570151", WHATSAPP_SERVER), message: ""},
-		{name: "רועי סביון", jid: types.NewJID("972533392950", WHATSAPP_SERVER), message: ""},
-		{name: "מיכל ארץ קדושה", jid: types.NewJID("972547501467", WHATSAPP_SERVER), message: ""},
-		{name: "מלאכי שוורץ", jid: types.NewJID("972533011490", WHATSAPP_SERVER), message: ""},
-		{name: "יונתן אבידור", jid: types.NewJID("972542166594", WHATSAPP_SERVER), message: ""},
+	err := godotenv.Load()
+	if err != nil {
+		panic("Error loading .env file")
+	}
+	COMMANDER_NUMBER := os.Getenv("COMMANDER_NUMBER")
+	var teamB []*Soldier
+	soldiersFile, err := os.ReadFile("soldiers.json")
+	if err != nil {
+		panic(err)
+	}
+	var soldiersJson []soldierJson
+	if err = json.Unmarshal(soldiersFile, &soldiersJson); err != nil {
+		panic(err)
+	}
+	for _, v := range soldiersJson {
+		teamB = append(teamB, &Soldier{
+			name:    v.Name,
+			jid:     types.NewJID(v.Number, WHATSAPP_SERVER),
+			message: "",
+		})
 	}
 	dbLog := waLog.Stdout("Database", "DEBUG", true)
 	container, err := sqlstore.New("sqlite3", "file:examplestore.db?_foreign_keys=on&_journal_mode=WAL", dbLog)
@@ -117,7 +135,7 @@ func main() {
 	whatsapp.
 		OnMessage(reactWithLike(teamB)).
 		OnMessage(registerMessage(teamB)).
-		OnMessage(sendIfFinished(teamB)).
+		OnMessage(sendIfFinished(teamB, COMMANDER_NUMBER)).
 		OnMessage(printMessage).
 		Init()
 	c := make(chan os.Signal, 1)
